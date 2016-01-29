@@ -79,18 +79,6 @@ class SaleLine:
         super(SaleLine, cls).__setup__()
         cls.unit_price.states['readonly'] = True
         cls.unit_price.digits = (20, DIGITS + DISCOUNT_DIGITS)
-        cls.unit.on_change.add('discount')
-        cls.unit.on_change.add('_parent_sale.sale_discount')
-        cls.amount.on_change_with.add('discount')
-        cls.amount.on_change_with.add('_parent_sale.sale_discount')
-        cls.amount.on_change_with.add('gross_unit_price')
-        cls.product.on_change.add('_parent_sale.price_list')
-        cls.product.on_change.add('discount')
-        cls.product.on_change.add('unit_price')
-        cls.product.on_change.add('_parent_sale.sale_discount')
-        cls.quantity.on_change.add('discount')
-        cls.quantity.on_change.add('unit_price')
-        cls.quantity.on_change.add('_parent_sale.sale_discount')
 
     def update_prices(self):
         unit_price = None
@@ -150,6 +138,8 @@ class SaleLine:
     def default_sale_discount():
         return Transaction().context.get('sale_discount', Decimal(0))
 
+    @fields.depends('unit_price', 'discount', '_parent_sale.sale_discount',
+        '_parent_sale.price_list')
     def on_change_product(self):
         res = super(SaleLine, self).on_change_product()
         if 'unit_price' in res:
@@ -167,6 +157,7 @@ class SaleLine:
                 res['discount'] = Decimal(0)
         return res
 
+    @fields.depends('unit_price', 'discount', '_parent_sale.sale_discount')
     def on_change_quantity(self):
         res = super(SaleLine, self).on_change_quantity()
         if 'unit_price' in res:
